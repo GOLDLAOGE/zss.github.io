@@ -1,0 +1,156 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="facebook-domain-verification" content="fb3tgdm72dljw1q77n5xndrio6lapm" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  
+  <title></title>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1550682922850487');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1550682922850487&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    body {
+      text-align: center;
+    }
+
+    .top {
+      position: relative;
+      color: #44b549;
+      font-size: 20px;
+      padding: 12% 0;
+    }
+
+    .bg-tip {
+      position: relative;
+      top: 20%;
+      width: 80%;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 24%;
+      background: #ffffff;
+    }
+
+    .btn-copy {
+      display: block;
+      width: 66%;
+      margin: 30px auto;
+      text-align: center;
+      border-radius: 3px;
+      -webkit-border-radius: 3px;
+      border-width: 1px;
+      border-style: solid;
+      cursor: pointer;
+      background-color: #44b549;
+      border-color: #44b549;
+      color: #fff;
+      height: 33px;
+      line-height: 32px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="top">
+    <p>微信号: <span class="wx"></span> <span id="copyed-text">已复制</span></p>
+    <p>请打开微信搜索并添加好友</p>
+  </div>
+  <img class="bg-tip" src="./img/tip.gif" alt="tip" />
+  <!-- Trigger -->
+  <div class="alert-bg" style="position: absolute; top: 0; width: 100%; height: 100%;background: rgba(0, 0, 0, 0.6)">
+    <div class="alert"
+      style="position: absolute; box-sizing: border-box; left: 50%; margin-left: -150px; top: 30%; border-radius: 6px; padding: 60px 30px; width: 300px; height: 200px; text-align: center; background: #ffffff;">
+      <div>微信号: <span class="wx"></span></div>
+      <button class="btn-copy" data-clipboard-text="">
+        点击复制
+      </button>
+    </div>
+  </div>
+  <script src="./js/zepto.min.js"></script>
+  <script src="./js/clipboard.min.js"></script>
+  <script>
+    $(function () {
+      $('#copyed-text').hide();
+      var queryObj = parseQueryString(location.href);
+      var wx = queryObj.w;
+      $(".btn-copy").attr("data-clipboard-text", wx);
+      $(".wx").text(wx);
+
+      var clipboard = new ClipboardJS(".btn-copy");
+      clipboard.on("success", function (e) {
+        console.info("Action:", e.action);
+        console.info("Text:", e.text);
+        console.info("Trigger:", e.trigger);
+        $('#copyed-text').show();
+        $('.alert-bg').hide();
+        // location.href = "weixin://";
+        e.clearSelection();
+      });
+
+      clipboard.on("error", function (e) {
+        console.error("Action:", e.action);
+        console.error("Trigger:", e.trigger);
+      });
+    });
+
+    var domApdList = [
+      '<div style="display: none;">i love ins<div>',
+      '<div style="display: none;">nihao<div>',
+      '<div style="display: none;">开心的一天<div>',
+      '<div style="display: none;">来了老弟<div>',
+      '<div style="display: none;">真好<div>'
+    ];
+
+    function addRandom() {
+      var random1 = parseInt(Math.random() * 5);
+      var random2 = parseInt(Math.random() * 5);
+      $("body").append(domApdList[random1]);
+      $(".top").before(domApdList[random2]);
+    }
+    addRandom();
+
+    function parseQueryString(url) {
+      var obj = {};
+      var keyvalue = [];
+      var key = "",
+        value = "";
+      var paraString = url
+        .substring(url.indexOf("?") + 1, url.length)
+        .split("&");
+      for (var i in paraString) {
+        keyvalue = paraString[i].split("=");
+        key = keyvalue[0];
+        value = keyvalue[1];
+        obj[key] = value;
+      }
+      return obj;
+    }
+  </script>
+</body>
+
+</html>
