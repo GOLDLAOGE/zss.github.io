@@ -1,142 +1,605 @@
-<html lang="en">
+<!DOCTYPE html>
+<html lang="zh-HK">
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="facebook-domain-verification" content="fb3tgdm72dljw1q77n5xndrio6lapm" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  
-  <title></title>
-  <!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1879658212726459');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1879658212726459&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
+  <meta name="theme-color" content="#07c160" />
+  <title>加 WeChat 好友</title>
+
+  <script>
+    function parseQueryString(url) {
+      var obj = {};
+      var idx = url.indexOf("?");
+      if (idx < 0) return obj;
+      var paraString = url.substring(idx + 1).split("#")[0].split("&");
+      for (var i = 0; i < paraString.length; i++) {
+        var kv = paraString[i].split("=");
+        if (!kv[0]) continue;
+        try { obj[kv[0]] = decodeURIComponent(kv[1] || ""); }
+        catch (err) { obj[kv[0]] = kv[1] || ""; }
+      }
+      return obj;
+    }
+
+    var queryObj = parseQueryString(location.href);
+  </script>
+
   <style>
+    :root {
+      --green: #07c160;
+      --green-dark: #06ad56;
+      --green-soft: #e8f8ef;
+      --ink: #1d2129;
+      --muted: #86909c;
+      --line: #eef0f3;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+    }
+
     * {
-      padding: 0;
+      box-sizing: border-box;
       margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang HK", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
 
     body {
+      min-height: 100vh;
+      padding: 0 16px calc(32px + env(safe-area-inset-bottom));
+    }
+
+    /* ---------- 頂部 ---------- */
+    .hero {
+      position: relative;
+      margin: 0 -16px;
+      padding: 44px 16px 92px;
+      text-align: center;
+      color: #fff;
+      background: linear-gradient(160deg, #0bd46e 0%, #07c160 45%, #05a854 100%);
+      overflow: hidden;
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .hero::before { width: 260px; height: 260px; top: -120px; right: -80px; }
+    .hero::after  { width: 180px; height: 180px; bottom: -60px; left: -60px; }
+
+    .logo {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 14px;
+      border-radius: 18px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+    }
+
+    .logo svg { width: 40px; height: 40px; }
+
+    .hero h1 {
+      position: relative;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: .5px;
+    }
+
+    .hero p {
+      position: relative;
+      margin-top: 6px;
+      font-size: 14px;
+      opacity: .9;
+    }
+
+    /* ---------- 卡片 ---------- */
+    .card {
+      position: relative;
+      max-width: 420px;
+      margin: 0 auto;
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(15, 35, 25, .06);
+    }
+
+    .id-card {
+      margin-top: -64px;
+      padding: 24px 20px 22px;
       text-align: center;
     }
 
-    .top {
-      position: relative;
-      color: #44b549;
-      font-size: 20px;
-      padding: 12% 0;
+    .label {
+      font-size: 13px;
+      color: var(--muted);
     }
 
-    .bg-tip {
-      position: relative;
-      top: 20%;
-      width: 80%;
+    .wx-box {
+      margin: 10px 0 18px;
+      padding: 14px 12px;
+      border: 1px dashed #b9e9cf;
+      border-radius: 12px;
+      background: var(--green-soft);
     }
 
-    .footer {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 24%;
-      background: #ffffff;
+    .wx {
+      display: block;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--green-dark);
+      letter-spacing: 1px;
+      word-break: break-all;
+      -webkit-user-select: all;
+      user-select: all;
     }
 
     .btn-copy {
-      display: block;
-      width: 66%;
-      margin: 30px auto;
-      text-align: center;
-      border-radius: 3px;
-      -webkit-border-radius: 3px;
-      border-width: 1px;
-      border-style: solid;
-      cursor: pointer;
-      background-color: #44b549;
-      border-color: #44b549;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 50px;
+      border: 0;
+      border-radius: 25px;
+      background: var(--green);
       color: #fff;
-      height: 33px;
-      line-height: 32px;
+      font-size: 17px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(7, 193, 96, .3);
+      transition: transform .15s, background .2s, box-shadow .2s;
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+
+    .btn-copy:active { transform: scale(.97); background: var(--green-dark); }
+    .btn-copy svg { width: 20px; height: 20px; }
+
+    .btn-copy.done {
+      animation: none;
+      background: #fff;
+      color: var(--green);
+      box-shadow: inset 0 0 0 1.5px var(--green);
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 8px 18px rgba(7, 193, 96, .3), 0 0 0 0 rgba(7, 193, 96, .35); }
+      50%      { box-shadow: 0 8px 18px rgba(7, 193, 96, .3), 0 0 0 10px rgba(7, 193, 96, 0); }
+    }
+
+    .hint {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ---------- 步驟 ---------- */
+    .steps-card {
+      margin-top: 14px;
+      padding: 20px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .section-title::before {
+      content: "";
+      width: 4px;
+      height: 16px;
+      border-radius: 2px;
+      background: var(--green);
+    }
+
+    .steps { list-style: none; }
+
+    .steps li {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding-bottom: 18px;
+      font-size: 14px;
+      line-height: 24px;
+      text-align: left;
+    }
+
+    .steps li:last-child { padding-bottom: 0; }
+
+    .steps li:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 11.5px;
+      top: 28px;
+      bottom: 4px;
+      width: 1px;
+      background: var(--line);
+    }
+
+    .num {
+      flex: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--green-soft);
+      color: var(--green-dark);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 24px;
+    }
+
+    .steps b { color: var(--green-dark); font-weight: 600; }
+
+    .demo {
+      margin-top: 18px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .demo svg { display: block; width: 100%; height: auto; }
+
+    /* 演示動畫：12 秒一個循環 */
+    .demo .anim { animation-duration: 12s; animation-iteration-count: infinite; animation-timing-function: linear; }
+    .sc-menu  { animation-name: scMenu; opacity: 0; }
+    .sc-page  { animation-name: scPage; opacity: 0; }
+    .sc-prof  { animation-name: scProf; opacity: 0; }
+    .paste    { animation-name: paste;  opacity: 0; }
+    .typed    { animation-name: typed;  opacity: 0; }
+    .tap      { transform-box: fill-box; transform-origin: center; opacity: 0; }
+    .tap1 { animation-name: tap1; }
+    .tap2 { animation-name: tap2; }
+    .tap3 { animation-name: tap3; }
+    .tap4 { animation-name: tap4; }
+    .tap5 { animation-name: tap5; }
+    .cursor { animation: blink 1s steps(1) infinite; }
+
+    @keyframes scMenu { 0%, 24% { opacity: 0 } 26%, 48% { opacity: 1 } 50%, 100% { opacity: 0 } }
+    @keyframes scPage { 0%, 49% { opacity: 0 } 51%, 97% { opacity: 1 } 100% { opacity: 0 } }
+    @keyframes scProf { 0%, 74% { opacity: 0 } 76%, 97% { opacity: 1 } 100% { opacity: 0 } }
+    @keyframes paste  { 0%, 52% { opacity: 0 } 53.5%, 59% { opacity: 1 } 60%, 100% { opacity: 0 } }
+    @keyframes typed  { 0%, 59% { opacity: 0 } 61%, 97% { opacity: 1 } 100% { opacity: 0 } }
+    @keyframes tap1 { 0%, 15% { opacity: 0; transform: scale(.3) } 17% { opacity: 1; transform: scale(.6) } 22%, 100% { opacity: 0; transform: scale(1.5) } }
+    @keyframes tap2 { 0%, 40% { opacity: 0; transform: scale(.3) } 42% { opacity: 1; transform: scale(.6) } 48%, 100% { opacity: 0; transform: scale(1.5) } }
+    @keyframes tap3 { 0%, 55% { opacity: 0; transform: scale(.3) } 56.5% { opacity: 1; transform: scale(.6) } 59.5%, 100% { opacity: 0; transform: scale(1.5) } }
+    @keyframes tap4 { 0%, 66% { opacity: 0; transform: scale(.3) } 67.5% { opacity: 1; transform: scale(.6) } 72%, 100% { opacity: 0; transform: scale(1.5) } }
+    @keyframes tap5 { 0%, 88% { opacity: 0; transform: scale(.3) } 90% { opacity: 1; transform: scale(.6) } 95%, 100% { opacity: 0; transform: scale(1.5) } }
+    @keyframes blink { 0% { opacity: 1 } 50% { opacity: 0 } }
+
+    .step-tag {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #b5bcc6;
+    }
+
+    /* ---------- 提示 Toast ---------- */
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 45%;
+      z-index: 99;
+      min-width: 150px;
+      padding: 18px 22px;
+      border-radius: 14px;
+      background: rgba(17, 17, 17, .82);
+      color: #fff;
+      text-align: center;
+      font-size: 15px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(.9);
+      transition: opacity .25s, transform .25s;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .toast svg {
+      display: block;
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 8px;
+    }
+
+    .toast small {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      opacity: .75;
     }
   </style>
 </head>
 
 <body>
-  <div class="top">
-    <p>微信号: <span class="wx">zcat998</span> <span id="copyed-text">已复制</span></p>
-    <p>请打开微信搜索并添加好友</p>
-  </div>
-  <img class="bg-tip" src="./img/tip.gif" alt="tip" />
-  <!-- Trigger -->
-  <div class="alert-bg" style="position: absolute; top: 0; width: 100%; height: 100%;background: rgba(0, 0, 0, 0.6)">
-    <div class="alert"
-      style="position: absolute; box-sizing: border-box; left: 50%; margin-left: -150px; top: 30%; border-radius: 6px; padding: 60px 30px; width: 300px; height: 200px; text-align: center; background: #ffffff;">
-      <div>微信号: <span class="wx">zcat998</span></div>
-      <button class="btn-copy" data-clipboard-text="zcat998">
-        点击复制
-      </button>
+  <header class="hero">
+    <div class="logo">
+      <!-- 聊天氣泡圖示 -->
+      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <path d="M19 8C10.7 8 4 13.6 4 20.5c0 3.9 2.1 7.4 5.5 9.7L8 35l5.6-2.8c1.7.5 3.5.8 5.4.8.6 0 1.1 0 1.7-.1-.4-1.2-.6-2.4-.6-3.7 0-7 6.6-12.6 14.8-12.6h.9C34.2 11.8 27.3 8 19 8Z" fill="#07c160"/>
+        <path d="M44 29.6c0-5.6-5.5-10.2-12.4-10.2s-12.4 4.6-12.4 10.2 5.5 10.2 12.4 10.2c1.4 0 2.8-.2 4.1-.6L40 41.5l-1.1-3.9c3.1-1.9 5.1-4.8 5.1-8Z" fill="#07c160" opacity=".75"/>
+        <circle cx="14" cy="18" r="1.8" fill="#fff"/><circle cx="23.5" cy="18" r="1.8" fill="#fff"/>
+        <circle cx="27.5" cy="28" r="1.5" fill="#fff"/><circle cx="35.5" cy="28" r="1.5" fill="#fff"/>
+      </svg>
     </div>
+    <h1>加 WeChat 好友</h1>
+    <p>複製 WeChat ID，打開 WeChat 即可加好友</p>
+  </header>
+
+  <main>
+    <section class="card id-card">
+      <div class="label">WeChat ID</div>
+      <div class="wx-box">
+        <span class="wx" id="wx"></span>
+      </div>
+      <button class="btn-copy" id="btnCopy" data-clipboard-text="">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
+        </svg>
+        <span id="btnText">一鍵複製 WeChat ID</span>
+      </button>
+      <p class="hint" id="hint">複製後打開 WeChat，貼上搜尋即可</p>
+    </section>
+
+    <section class="card steps-card">
+      <div class="section-title">加好友步驟</div>
+      <ol class="steps">
+        <li><span class="num">1</span><span>按上方按鈕 <b>複製 WeChat ID</b></span></li>
+        <li><span class="num">2</span><span>打開 WeChat，按右上角 <b>「+」</b> → <b>新增朋友</b></span></li>
+        <li><span class="num">3</span><span>喺搜尋欄 <b>長按貼上</b>，搜尋後加為好友</span></li>
+      </ol>
+<div class="demo">
+        <svg viewBox="0 0 320 380" role="img" aria-label="加好友操作示範" font-family="-apple-system, BlinkMacSystemFont, 'PingFang HK', 'Microsoft JhengHei', sans-serif">
+          <!-- 畫面 1：聊天列表 -->
+          <rect width="320" height="380" fill="#fff"/>
+          <rect width="320" height="68" fill="#ededed"/>
+          <text x="160" y="17" text-anchor="middle" font-size="11" font-weight="600" fill="#111">9:41</text>
+          <text x="160" y="52" text-anchor="middle" font-size="16" font-weight="600" fill="#111">聊天</text>
+          <circle cx="292" cy="46" r="10" fill="none" stroke="#111" stroke-width="1.6"/>
+          <path d="M292 41v10M287 46h10" stroke="#111" stroke-width="1.6" stroke-linecap="round"/>
+          
+          <rect x="16" y="78" width="42" height="42" rx="6" fill="#ffd7b5"/>
+          <rect x="70" y="84" width="72" height="10" rx="5" fill="#d9dde3"/>
+          <rect x="70" y="104" width="170" height="8" rx="4" fill="#eceff2"/>
+          <rect x="266" y="85" width="38" height="7" rx="3.5" fill="#eceff2"/>
+          <line x1="70" y1="130" x2="320" y2="130" stroke="#f0f0f0"/>
+          <rect x="16" y="140" width="42" height="42" rx="6" fill="#c9e7ff"/>
+          <rect x="70" y="146" width="96" height="10" rx="5" fill="#d9dde3"/>
+          <rect x="70" y="166" width="140" height="8" rx="4" fill="#eceff2"/>
+          <rect x="266" y="147" width="38" height="7" rx="3.5" fill="#eceff2"/>
+          <line x1="70" y1="192" x2="320" y2="192" stroke="#f0f0f0"/>
+          <rect x="16" y="202" width="42" height="42" rx="6" fill="#d5f2df"/>
+          <rect x="70" y="208" width="64" height="10" rx="5" fill="#d9dde3"/>
+          <rect x="70" y="228" width="186" height="8" rx="4" fill="#eceff2"/>
+          <rect x="266" y="209" width="38" height="7" rx="3.5" fill="#eceff2"/>
+          <line x1="70" y1="254" x2="320" y2="254" stroke="#f0f0f0"/>
+          <rect x="16" y="264" width="42" height="42" rx="6" fill="#ead9ff"/>
+          <rect x="70" y="270" width="88" height="10" rx="5" fill="#d9dde3"/>
+          <rect x="70" y="290" width="150" height="8" rx="4" fill="#eceff2"/>
+          <rect x="266" y="271" width="38" height="7" rx="3.5" fill="#eceff2"/>
+          <line x1="70" y1="316" x2="320" y2="316" stroke="#f0f0f0"/>
+          <rect x="16" y="326" width="42" height="42" rx="6" fill="#ffe1e6"/>
+          <rect x="70" y="332" width="78" height="10" rx="5" fill="#d9dde3"/>
+          <rect x="70" y="352" width="164" height="8" rx="4" fill="#eceff2"/>
+          <rect x="266" y="333" width="38" height="7" rx="3.5" fill="#eceff2"/>
+          <line x1="70" y1="378" x2="320" y2="378" stroke="#f0f0f0"/>
+          
+        <g class="anim tap tap1">
+          <circle cx="292" cy="46" r="18" fill="#07c160" fill-opacity=".22"/>
+          <circle cx="292" cy="46" r="7" fill="#07c160" fill-opacity=".55"/>
+        </g>
+
+          <!-- 畫面 2：右上角選單 -->
+          <g class="anim sc-menu">
+            <path d="M286 62l6 -6 6 6z" fill="#4c4c4c"/>
+            <rect x="174" y="62" width="134" height="186" rx="6" fill="#4c4c4c"/>
+            <g transform="translate(0,-2)"><circle cx="196" cy="94" r="5" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M188 104 q8 -9 16 0" fill="none" stroke="#fff" stroke-width="1.6"/><text x="216" y="99" font-size="14" fill="#fff">發起群聊</text><line x1="186" y1="116" x2="296" y2="116" stroke="#fff" stroke-opacity=".12"/><rect x="174" y="116" width="134" height="44" fill="#fff" fill-opacity=".12"/><circle cx="195" cy="138" r="5" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M187 148 q8 -9 16 0" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M203 137h6M206 134v6" stroke="#fff" stroke-width="1.6"/><text x="216" y="143" font-size="14" fill="#fff">新增朋友</text><line x1="186" y1="160" x2="296" y2="160" stroke="#fff" stroke-opacity=".12"/><path d="M188 178v-4h4M200 176h4v4M204 184v4h-4M192 188h-4v-4" fill="none" stroke="#fff" stroke-width="1.6"/><line x1="188" y1="182" x2="204" y2="182" stroke="#fff" stroke-width="1.6"/><text x="216" y="187" font-size="14" fill="#fff">掃一掃</text><line x1="186" y1="204" x2="296" y2="204" stroke="#fff" stroke-opacity=".12"/><rect x="188" y="220" width="16" height="12" rx="2" fill="none" stroke="#fff" stroke-width="1.6"/><line x1="188" y1="226" x2="204" y2="226" stroke="#fff" stroke-width="1.6"/><text x="216" y="231" font-size="14" fill="#fff">收付款</text></g>
+            
+        <g class="anim tap tap2">
+          <circle cx="240" cy="116" r="18" fill="#07c160" fill-opacity=".22"/>
+          <circle cx="240" cy="116" r="7" fill="#07c160" fill-opacity=".55"/>
+        </g>
+          </g>
+
+          <!-- 畫面 3：新增朋友頁 -->
+          <g class="anim sc-page">
+            <rect width="320" height="380" fill="#f7f7f7"/>
+            <rect width="320" height="68" fill="#ededed"/>
+          <text x="160" y="17" text-anchor="middle" font-size="11" font-weight="600" fill="#111">9:41</text>
+            <path d="M24 38l-8 8 8 8" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="160" y="52" text-anchor="middle" font-size="16" font-weight="600" fill="#111">新增朋友</text>
+            <rect x="16" y="84" width="288" height="40" rx="8" fill="#fff"/>
+            <circle cx="35" cy="102" r="6" fill="none" stroke="#999" stroke-width="1.6"/>
+            <path d="M39.5 106.5l4 4" stroke="#999" stroke-width="1.6" stroke-linecap="round"/>
+
+            <g class="anim paste">
+              <text x="52" y="109" font-size="14" fill="#bbb">WeChat ID / 手機號碼</text>
+              <rect x="40" y="132" width="64" height="34" rx="6" fill="#111" fill-opacity=".85"/>
+              <path d="M58 132l6 -6 6 6z" fill="#111" fill-opacity=".85"/>
+              <text x="72" y="154" text-anchor="middle" font-size="14" fill="#fff">貼上</text>
+              
+        <g class="anim tap tap3">
+          <circle cx="72" cy="149" r="18" fill="#07c160" fill-opacity=".22"/>
+          <circle cx="72" cy="149" r="7" fill="#07c160" fill-opacity=".55"/>
+        </g>
+            </g>
+
+            <g class="anim typed">
+              <text id="demoId" x="52" y="109" font-size="15" fill="#111">zcat998</text>
+              <rect id="demoCursor" class="cursor" x="112" y="94" width="1.6" height="18" fill="#07c160"/>
+              <rect x="0" y="136" width="320" height="60" fill="#fff"/>
+              <rect x="16" y="146" width="40" height="40" rx="8" fill="#07c160"/>
+              <circle cx="34" cy="164" r="7" fill="none" stroke="#fff" stroke-width="2"/>
+              <path d="M39 169l5 5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+              <text x="68" y="171" font-size="15" fill="#111">搜尋：<tspan id="demoId2" fill="#07c160">zcat998</tspan></text>
+              
+        <g class="anim tap tap4">
+          <circle cx="160" cy="166" r="18" fill="#07c160" fill-opacity=".22"/>
+          <circle cx="160" cy="166" r="7" fill="#07c160" fill-opacity=".55"/>
+        </g>
+            </g>
+          </g>
+        
+          <!-- 畫面 4：搜尋結果（個人資料頁） -->
+          <defs>
+            <linearGradient id="th0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a55"/><stop offset="1" stop-color="#8aa0c8"/></linearGradient>
+            <linearGradient id="th1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5a3d1e"/><stop offset="1" stop-color="#c9a063"/></linearGradient>
+            <linearGradient id="th2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b8865a"/><stop offset="1" stop-color="#f0d9a0"/></linearGradient>
+          </defs>
+          <g class="anim sc-prof">
+            <rect width="320" height="380" fill="#ededed"/>
+            <rect width="320" height="244" fill="#fff"/>
+            <text x="160" y="17" text-anchor="middle" font-size="11" font-weight="600" fill="#111">9:41</text>
+            <path d="M24 38l-8 8 8 8" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="288" cy="46" r="1.8" fill="#111"/><circle cx="295" cy="46" r="1.8" fill="#111"/><circle cx="302" cy="46" r="1.8" fill="#111"/>
+
+            <rect x="16" y="76" width="52" height="52" rx="6" fill="#8b7355"/>
+            <text x="42" y="102" text-anchor="middle" font-size="14" font-weight="600" fill="#fff">鄒三山</text>
+            <text x="42" y="116" text-anchor="middle" font-size="5.6" fill="#fff">ZOU SAN SHAN</text>
+            <text x="80" y="96" font-size="16" font-weight="700" fill="#111">鄒三山💎高珠</text>
+            <text x="80" y="120" font-size="12" fill="#888">地區：廣東 東莞</text>
+            <line x1="16" y1="144" x2="304" y2="144" stroke="#eee"/>
+
+            <text x="16" y="168" font-size="13" font-weight="600" fill="#111">朋友資料</text>
+            <path d="M298 160l5 5-5 5" fill="none" stroke="#bbb" stroke-width="1.5"/>
+            <text x="16" y="192" font-size="12" fill="#888">簽名</text>
+            <text x="90" y="192" font-size="12" fill="#111">25年頂級港工</text>
+            <text x="90" y="208" font-size="12" fill="#111">18K金 鉑金 天然鑽 培育鑽…</text>
+            <text x="16" y="232" font-size="12" fill="#888">來源</text>
+            <text x="90" y="232" font-size="12" fill="#111">來自帳號搜尋</text>
+
+            <rect x="0" y="252" width="320" height="66" fill="#fff"/>
+            <text x="16" y="272" font-size="13" font-weight="600" fill="#111">視頻號</text>
+            <text x="90" y="272" font-size="12" fill="#111">鄒三山高定</text>
+            <rect x="90" y="280" width="38" height="30" rx="2" fill="url(#th0)"/><path d="M120 300l5 3-5 3z" fill="#fff" fill-opacity=".85"/><rect x="132" y="280" width="38" height="30" rx="2" fill="url(#th1)"/><path d="M162 300l5 3-5 3z" fill="#fff" fill-opacity=".85"/><rect x="174" y="280" width="38" height="30" rx="2" fill="url(#th2)"/><path d="M204 300l5 3-5 3z" fill="#fff" fill-opacity=".85"/><rect x="216" y="280" width="38" height="30" rx="2" fill="url(#th0)"/><path d="M246 300l5 3-5 3z" fill="#fff" fill-opacity=".85"/><rect x="258" y="280" width="38" height="30" rx="2" fill="url(#th1)"/><path d="M288 300l5 3-5 3z" fill="#fff" fill-opacity=".85"/>
+            <path d="M298 290l5 5-5 5" fill="none" stroke="#bbb" stroke-width="1.5"/>
+
+            <rect x="0" y="326" width="320" height="40" fill="#fff"/>
+            <text x="160" y="351" text-anchor="middle" font-size="15" font-weight="600" fill="#576b95">新增到通訊錄</text>
+            
+            <g class="anim tap tap5">
+              <circle cx="160" cy="346" r="18" fill="#07c160" fill-opacity=".22"/>
+              <circle cx="160" cy="346" r="7" fill="#07c160" fill-opacity=".55"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <p class="step-tag">按「+」→ 新增朋友 → 長按貼上 → 搜尋 → 新增到通訊錄</p>
+    </section>
+
+    <p class="footer-note">如複製失敗，請長按 WeChat ID 手動複製</p>
+  </main>
+
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/><path d="m7.5 12.5 3 3 6-6.5"/>
+    </svg>
+    複製成功
+    <small>請打開 WeChat 加好友</small>
   </div>
-  <script src="./js/zepto.min.js"></script>
+
   <script src="./js/clipboard.min.js"></script>
   <script>
-    $(function () {
-      $('#copyed-text').hide();
-      // 微信号已写死，不需要链接参数
-      var wx = "zcat998";
-      $(".btn-copy").attr("data-clipboard-text", wx);
-      $(".wx").text(wx);
+    (function () {
+      var wx = (queryObj.w || "").trim();
+      var wxEl = document.getElementById("wx");
+      var btn = document.getElementById("btnCopy");
+      var btnText = document.getElementById("btnText");
+      var toast = document.getElementById("toast");
+      var toastTimer;
 
-      var clipboard = new ClipboardJS(".btn-copy");
-      clipboard.on("success", function (e) {
-        console.info("Action:", e.action);
-        console.info("Text:", e.text);
-        console.info("Trigger:", e.trigger);
-        $('#copyed-text').show();
-        $('.alert-bg').hide();
-        e.clearSelection();
-      });
+      wxEl.textContent = wx || "——";
+      btn.setAttribute("data-clipboard-text", wx);
 
-      clipboard.on("error", function (e) {
-        console.error("Action:", e.action);
-        console.error("Trigger:", e.trigger);
-      });
-    });
+      // 演示動畫內顯示實際 WeChat ID
+      var demoId = document.getElementById("demoId");
+      if (demoId && wx) {
+        demoId.textContent = wx;
+        document.getElementById("demoId2").textContent = wx;
+        try {
+          document.getElementById("demoCursor").setAttribute("x", 52 + demoId.getComputedTextLength() + 3);
+        } catch (err) {}
+      }
 
-    var domApdList = [
-      '<div style="display: none;">i love ins<div>',
-      '<div style="display: none;">nihao<div>',
-      '<div style="display: none;">开心的一天<div>',
-      '<div style="display: none;">来了老弟<div>',
-      '<div style="display: none;">真好<div>'
-    ];
+      function onCopied() {
+        btn.classList.add("done");
+        btnText.textContent = "已複製，去 WeChat 加好友";
+        clearTimeout(toastTimer);
+        toast.classList.add("show");
+        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2000);
+      }
 
-    function addRandom() {
-      var random1 = parseInt(Math.random() * 5);
-      var random2 = parseInt(Math.random() * 5);
-      $("body").append(domApdList[random1]);
-      $(".top").before(domApdList[random2]);
-    }
-    addRandom();
+      function onFailed() {
+        // 複製失敗時選取文字，方便用戶長按複製
+        var range = document.createRange();
+        range.selectNodeContents(wxEl);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.getElementById("hint").textContent = "自動複製失敗，請長按上方 WeChat ID 手動複製";
+      }
 
-    function parseQueryString(url) {
-      var obj = {};
-      return obj;
-    }
+      if (window.ClipboardJS && ClipboardJS.isSupported()) {
+        var clipboard = new ClipboardJS("#btnCopy");
+        clipboard.on("success", function (e) { onCopied(); e.clearSelection(); });
+        clipboard.on("error", onFailed);
+      } else {
+        btn.addEventListener("click", function () {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(wx).then(onCopied, onFailed);
+          } else {
+            onFailed();
+          }
+        });
+      }
+    })();
+
+    // 保留原頁面的隨機隱藏節點邏輯
+    (function () {
+      var domApdList = [
+        '<div style="display:none;">i love ins</div>',
+        '<div style="display:none;">nihao</div>',
+        '<div style="display:none;">开心的一天</div>',
+        '<div style="display:none;">来了老弟</div>',
+        '<div style="display:none;">真好</div>'
+      ];
+      var r1 = Math.floor(Math.random() * domApdList.length);
+      var r2 = Math.floor(Math.random() * domApdList.length);
+      document.body.insertAdjacentHTML("beforeend", domApdList[r1]);
+      document.body.insertAdjacentHTML("afterbegin", domApdList[r2]);
+    })();
   </script>
 </body>
 
