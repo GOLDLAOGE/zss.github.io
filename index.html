@@ -368,7 +368,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
         </svg>
-        <span id="btnText">一鍵複製 WeChat ID</span>
+        <span id="btnText">複製 ID 並打開 WeChat</span>
       </button>
       <p class="hint" id="hint">複製後打開 WeChat，貼上搜尋即可</p>
     </section>
@@ -376,8 +376,8 @@
     <section class="card steps-card">
       <div class="section-title">加好友步驟</div>
       <ol class="steps">
-        <li><span class="num">1</span><span>按上方按鈕 <b>複製 WeChat ID</b></span></li>
-        <li><span class="num">2</span><span>打開 WeChat，按右上角 <b>「+」</b> → <b>新增朋友</b></span></li>
+        <li><span class="num">1</span><span>按上方按鈕 <b>複製 ID</b>，會自動打開 WeChat</span></li>
+        <li><span class="num">2</span><span>在 WeChat 按右上角 <b>「+」</b> → <b>新增朋友</b></span></li>
         <li><span class="num">3</span><span>喺搜尋欄 <b>長按貼上</b>，搜尋後加為好友</span></li>
       </ol>
 <div class="demo">
@@ -527,7 +527,7 @@
       <circle cx="12" cy="12" r="10"/><path d="m7.5 12.5 3 3 6-6.5"/>
     </svg>
     複製成功
-    <small>請打開 WeChat 加好友</small>
+    <small id="toastSub">正在打開 WeChat…</small>
   </div>
 
   <script src="./js/clipboard.min.js"></script>
@@ -553,15 +553,92 @@
         } catch (err) {}
       }
 
-      function onCopied() {
-        btn.classList.add("done");
-        btnText.textContent = "已複製，去 WeChat 加好友";
-        clearTimeout(toastTimer);
-        toast.classList.add("show");
-        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2000);
+      /* ---------- 訪客統計 ---------- */
+      // 部署統計後台後，把下面換成你的 Cloudflare Worker 地址（結尾是 /e）；留空則不統計
+      var STATS_URL = "https://wechat-landing-stats.schmidtdean438.workers.dev/e";
+
+      var VID = (function () {
+        var v = "";
+        try { v = localStorage.getItem("lp_vid") || ""; } catch (err) {}
+        if (!v) {
+          v = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+          try { localStorage.setItem("lp_vid", v); } catch (err) {}
+        }
+        return v;
+      })();
+
+      function track(e) {
+        if (!STATS_URL) return;
+        var body = JSON.stringify({
+          e: e,
+          vid: VID,
+          w: wx,
+          src: queryObj.utm_source || queryObj.s || "",
+          cmp: queryObj.utm_campaign || queryObj.c || ""
+        });
+        try {
+          if (navigator.sendBeacon && navigator.sendBeacon(STATS_URL, body)) return;
+        } catch (err) {}
+        try { fetch(STATS_URL, { method: "POST", body: body, keepalive: true, mode: "no-cors" }); } catch (err) {}
       }
 
+      track("view");
+
+      var toastSub = document.getElementById("toastSub");
+      var openTimer;
+      var awayForWeChat = false;
+
+      // 複製成功後嘗試打開 WeChat（只能打開 App 首頁，無法直接跳到加好友頁）
+      function openWeChat() {
+        var settled = false;
+        function done(ok) {
+          if (settled) return;
+          settled = true;
+          document.removeEventListener("visibilitychange", onHide);
+          window.removeEventListener("pagehide", onHide);
+          clearTimeout(openTimer);
+          if (ok) {
+            awayForWeChat = true;
+            track("open_ok");
+          } else {
+            // 沒有成功跳轉（如在 Facebook / Instagram 內置瀏覽器中被攔截）
+            track("open_fail");
+            btnText.textContent = "已複製，按此打開 WeChat";
+            toastSub.textContent = "請手動打開 WeChat 貼上搜尋";
+          }
+        }
+        function onHide(ev) { if (ev.type === "pagehide" || document.hidden) done(true); }
+        document.addEventListener("visibilitychange", onHide);
+        window.addEventListener("pagehide", onHide);
+
+        try { window.location.href = "weixin://"; } catch (err) {}
+
+        clearTimeout(openTimer);
+        openTimer = setTimeout(function () { done(false); }, 1500);
+      }
+
+      function onCopied() {
+        track("copy");
+        btn.classList.add("done");
+        btnText.textContent = "已複製，正在打開 WeChat…";
+        toastSub.textContent = "正在打開 WeChat…";
+        clearTimeout(toastTimer);
+        toast.classList.add("show");
+        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2200);
+        openWeChat();
+      }
+
+      // 從 WeChat 返回頁面時，按鈕恢復成可再次打開的狀態
+      function onBack() {
+        if (document.hidden) return;
+        if (btn.classList.contains("done")) btnText.textContent = "已複製，按此打開 WeChat";
+        if (awayForWeChat) { awayForWeChat = false; track("return"); }
+      }
+      document.addEventListener("visibilitychange", onBack);
+      window.addEventListener("pageshow", onBack);
+
       function onFailed() {
+        track("copy_fail");
         // 複製失敗時選取文字，方便用戶長按複製
         var range = document.createRange();
         range.selectNodeContents(wxEl);
