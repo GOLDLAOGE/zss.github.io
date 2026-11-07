@@ -189,6 +189,32 @@
       color: var(--muted);
     }
 
+    .copy-dialog {
+      width: min(90vw, 380px);
+      max-height: 90vh;
+      margin: auto;
+      padding: 28px 24px 20px;
+      border: 0;
+      border-radius: 16px;
+      background: var(--card);
+      color: var(--ink);
+      text-align: center;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, .2);
+    }
+    .copy-dialog::backdrop { background: rgba(0, 0, 0, .5); }
+    .copy-dialog h2 { font-size: 20px; }
+    .copy-dialog .wx-box { margin: 16px 0; }
+    .dialog-close {
+      margin-top: 18px;
+      padding: 10px 16px;
+      border: 0;
+      background: transparent;
+      color: #087e43;
+      font: inherit;
+      cursor: pointer;
+    }
+    .copy-dialog button:focus-visible { outline: 3px solid #075e32; outline-offset: 3px; }
+
     /* ---------- 步驟 ---------- */
     .steps-card {
       margin-top: 14px;
@@ -368,7 +394,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
         </svg>
-        <span id="btnText">複製 ID 並打開 WeChat</span>
+        <span id="btnText">複製 WeChat ID</span>
       </button>
       <p class="hint" id="hint">複製後打開 WeChat，貼上搜尋即可</p>
     </section>
@@ -376,7 +402,7 @@
     <section class="card steps-card">
       <div class="section-title">加好友步驟</div>
       <ol class="steps">
-        <li><span class="num">1</span><span>按上方按鈕 <b>複製 ID</b>，會自動打開 WeChat</span></li>
+        <li><span class="num">1</span><span>按上方按鈕 <b>複製 ID</b>，然後手動打開 WeChat</span></li>
         <li><span class="num">2</span><span>在 WeChat 按右上角 <b>「+」</b> → <b>新增朋友</b></span></li>
         <li><span class="num">3</span><span>喺搜尋欄 <b>長按貼上</b>，搜尋後加為好友</span></li>
       </ol>
@@ -522,12 +548,20 @@
     <p class="footer-note">如複製失敗，請長按 WeChat ID 手動複製</p>
   </main>
 
-  <div class="toast" id="toast">
+  <dialog class="copy-dialog" id="copyDialog" aria-labelledby="dialogTitle">
+    <h2 id="dialogTitle">複製 WeChat ID</h2>
+    <div class="wx-box"><span class="wx" id="modalWx"></span></div>
+    <button class="btn-copy" id="modalCopy" data-clipboard-text="" autofocus>複製 WeChat ID</button>
+    <p class="hint" id="modalHint">複製後請手動打開 WeChat 搜尋</p>
+    <button class="dialog-close" id="closeDialog" type="button">查看加好友步驟</button>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
     <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="10"/><path d="m7.5 12.5 3 3 6-6.5"/>
     </svg>
     複製成功
-    <small id="toastSub">正在打開 WeChat…</small>
+    <small id="toastSub">請手動打開 WeChat 貼上搜尋</small>
   </div>
 
   <script src="./js/clipboard.min.js"></script>
@@ -539,6 +573,13 @@
       var btnText = document.getElementById("btnText");
       var toast = document.getElementById("toast");
       var toastTimer;
+      var dialog = document.getElementById("copyDialog");
+      var modalWx = document.getElementById("modalWx");
+      var modalCopy = document.getElementById("modalCopy");
+      modalWx.textContent = wx;
+      modalCopy.setAttribute("data-clipboard-text", wx);
+      document.getElementById("closeDialog").addEventListener("click", function () { dialog.close(); });
+      dialog.showModal();
 
       wxEl.textContent = wx || "——";
       btn.setAttribute("data-clipboard-text", wx);
@@ -585,81 +626,47 @@
       track("view");
 
       var toastSub = document.getElementById("toastSub");
-      var openTimer;
-      var awayForWeChat = false;
-
-      // 複製成功後嘗試打開 WeChat（只能打開 App 首頁，無法直接跳到加好友頁）
-      function openWeChat() {
-        var settled = false;
-        function done(ok) {
-          if (settled) return;
-          settled = true;
-          document.removeEventListener("visibilitychange", onHide);
-          window.removeEventListener("pagehide", onHide);
-          clearTimeout(openTimer);
-          if (ok) {
-            awayForWeChat = true;
-            track("open_ok");
-          } else {
-            // 沒有成功跳轉（如在 Facebook / Instagram 內置瀏覽器中被攔截）
-            track("open_fail");
-            btnText.textContent = "已複製，按此打開 WeChat";
-            toastSub.textContent = "請手動打開 WeChat 貼上搜尋";
-          }
-        }
-        function onHide(ev) { if (ev.type === "pagehide" || document.hidden) done(true); }
-        document.addEventListener("visibilitychange", onHide);
-        window.addEventListener("pagehide", onHide);
-
-        try { window.location.href = "weixin://"; } catch (err) {}
-
-        clearTimeout(openTimer);
-        openTimer = setTimeout(function () { done(false); }, 1500);
-      }
-
       function onCopied() {
         track("copy");
+        if (dialog.open) dialog.close();
         btn.classList.add("done");
-        btnText.textContent = "已複製，正在打開 WeChat…";
-        toastSub.textContent = "正在打開 WeChat…";
+        btnText.textContent = "已複製，點擊再次複製";
+        toastSub.textContent = "請手動打開 WeChat 貼上搜尋";
         clearTimeout(toastTimer);
         toast.classList.add("show");
         toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2200);
-        openWeChat();
       }
 
-      // 從 WeChat 返回頁面時，按鈕恢復成可再次打開的狀態
-      function onBack() {
-        if (document.hidden) return;
-        if (btn.classList.contains("done")) btnText.textContent = "已複製，按此打開 WeChat";
-        if (awayForWeChat) { awayForWeChat = false; track("return"); }
-      }
-      document.addEventListener("visibilitychange", onBack);
-      window.addEventListener("pageshow", onBack);
-
-      function onFailed() {
+      function onFailed(inDialog) {
         track("copy_fail");
-        // 複製失敗時選取文字，方便用戶長按複製
+        var target = inDialog ? modalWx : wxEl;
+        var hint = document.getElementById(inDialog ? "modalHint" : "hint");
+        hint.textContent = "自動複製失敗，請長按上方 WeChat ID 手動複製";
         var range = document.createRange();
-        range.selectNodeContents(wxEl);
+        range.selectNodeContents(target);
         var sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-        document.getElementById("hint").textContent = "自動複製失敗，請長按上方 WeChat ID 手動複製";
+        if (sel) { sel.removeAllRanges(); sel.addRange(range); }
       }
 
       if (window.ClipboardJS && ClipboardJS.isSupported()) {
         var clipboard = new ClipboardJS("#btnCopy");
-        clipboard.on("success", function (e) { onCopied(); e.clearSelection(); });
-        clipboard.on("error", onFailed);
+        var modalClipboard = new ClipboardJS("#modalCopy", { container: dialog });
+        clipboard.on("success", function (e) { e.clearSelection(); onCopied(); });
+        modalClipboard.on("success", function (e) { e.clearSelection(); onCopied(); });
+        clipboard.on("error", function () { onFailed(false); });
+        modalClipboard.on("error", function () { onFailed(true); });
       } else {
-        btn.addEventListener("click", function () {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(wx).then(onCopied, onFailed);
-          } else {
-            onFailed();
-          }
-        });
+        function bindCopy(button, inDialog) {
+          button.addEventListener("click", function () {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(wx).then(onCopied, function () { onFailed(inDialog); });
+            } else {
+              onFailed(inDialog);
+            }
+          });
+        }
+        bindCopy(btn, false);
+        bindCopy(modalCopy, true);
       }
     })();
 
