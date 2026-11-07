@@ -1,0 +1,10 @@
+ALTER TABLE events ADD COLUMN page TEXT;
+ALTER TABLE events ADD COLUMN sid TEXT;
+ALTER TABLE events ADD COLUMN event_id TEXT;
+ALTER TABLE events ADD COLUMN ref TEXT;
+ALTER TABLE events ADD COLUMN target TEXT;
+ALTER TABLE events ADD COLUMN elapsed_ms INTEGER;
+ALTER TABLE events ADD COLUMN scroll_pct INTEGER;
+CREATE UNIQUE INDEX idx_events_event_id ON events(event_id) WHERE event_id IS NOT NULL AND event_id != '';
+CREATE INDEX idx_events_page_ts ON events(page, ts);
+CREATE INDEX idx_events_sid_ts ON events(sid, ts);

@@ -1,0 +1,20 @@
+name = "wechat-landing-stats"
+account_id = "7394e0b3396258200c95a00f16cab129"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+
+# 只接受來自這個網域的統計數據（落地頁所在網域）
+[vars]
+ALLOWED_ORIGINS = "https://goldlaoge.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wechat-landing-stats"
+database_id = "9a06e673-2828-4b77-bb0e-940b65cd5a95"
+
+[observability]
+enabled = true
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.01

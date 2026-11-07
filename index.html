@@ -545,7 +545,7 @@
       <p class="step-tag">按「+」→ 新增朋友 → 長按貼上 → 搜尋 → 新增到通訊錄</p>
     </section>
 
-    <p class="footer-note">如複製失敗，請長按 WeChat ID 手動複製</p>
+    <p class="footer-note">如複製失敗，請長按 WeChat ID 手動複製<br>本頁使用匿名統計記錄瀏覽及操作，以改善體驗。</p>
   </main>
 
   <dialog class="copy-dialog" id="copyDialog" aria-labelledby="dialogTitle">
@@ -578,8 +578,6 @@
       var modalCopy = document.getElementById("modalCopy");
       modalWx.textContent = wx;
       modalCopy.setAttribute("data-clipboard-text", wx);
-      document.getElementById("closeDialog").addEventListener("click", function () { dialog.close(); });
-      dialog.showModal();
 
       wxEl.textContent = wx || "——";
       btn.setAttribute("data-clipboard-text", wx);
@@ -598,37 +596,125 @@
       // 部署統計後台後，把下面換成你的 Cloudflare Worker 地址（結尾是 /e）；留空則不統計
       var STATS_URL = "https://wechat-landing-stats.schmidtdean438.workers.dev/e";
 
+      function randomId() {
+        try {
+          if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+          var bytes = new Uint8Array(16);
+          if (window.crypto && window.crypto.getRandomValues) {
+            window.crypto.getRandomValues(bytes);
+            return Array.prototype.map.call(bytes, function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
+          }
+        } catch (err) {}
+        return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      }
       var VID = (function () {
         var v = "";
         try { v = localStorage.getItem("lp_vid") || ""; } catch (err) {}
         if (!v) {
-          v = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+          v = randomId();
           try { localStorage.setItem("lp_vid", v); } catch (err) {}
         }
         return v;
       })();
-
-      function track(e) {
-        if (!STATS_URL) return;
-        var body = JSON.stringify({
-          e: e,
-          vid: VID,
-          w: wx,
-          src: queryObj.utm_source || queryObj.s || "",
-          cmp: queryObj.utm_campaign || queryObj.c || ""
-        });
-        try {
-          if (navigator.sendBeacon && navigator.sendBeacon(STATS_URL, body)) return;
-        } catch (err) {}
-        try { fetch(STATS_URL, { method: "POST", body: body, keepalive: true, mode: "no-cors" }); } catch (err) {}
+      var SID = randomId();
+      var ref = "";
+      try { if (document.referrer) ref = new URL(document.referrer).hostname; } catch (err) {}
+      var visibleSince = document.visibilityState === "visible" ? Date.now() : null;
+      var visibleMs = 0;
+      var maxScroll = 0;
+      var milestones = {};
+      var stepsSeen = false;
+      var left = false;
+      var heartbeatTimer;
+      var heartbeatDelay = 15000;
+      var closeReason = "escape";
+      function elapsed() {
+        return Math.min(86400000, visibleMs + (visibleSince === null ? 0 : Math.max(0, Date.now() - visibleSince)));
       }
-
+      function track(e, target) {
+        if (!STATS_URL) return;
+        try {
+          var body = JSON.stringify({
+            e: e, vid: VID, w: wx,
+            src: queryObj.utm_source || queryObj.s || "",
+            cmp: queryObj.utm_campaign || queryObj.c || "",
+            page: location.pathname, sid: SID, event_id: randomId(), ref: ref,
+            target: target || "", elapsed_ms: elapsed(), scroll_pct: maxScroll
+          });
+          try {
+            if (navigator.sendBeacon && navigator.sendBeacon(STATS_URL, body)) return;
+          } catch (err) {}
+          try { fetch(STATS_URL, { method: "POST", body: body, keepalive: true, mode: "no-cors" }).catch(function () {}); } catch (err) {}
+        } catch (err) {}
+      }
+      function markSteps() {
+        if (!stepsSeen) { stepsSeen = true; track("steps_view"); }
+      }
+      function updateScroll() {
+        var root = document.documentElement;
+        var height = Math.max(root.scrollHeight, document.body.scrollHeight) - (window.innerHeight || root.clientHeight);
+        var pct = height > 0 ? Math.round(Math.max(0, window.scrollY || root.scrollTop) / height * 100) : 100;
+        maxScroll = Math.max(maxScroll, Math.min(100, pct));
+        var crossed = false;
+        [25, 50, 75, 100].forEach(function (n) {
+          if (maxScroll >= n && !milestones[n]) { milestones[n] = true; crossed = true; }
+        });
+        if (crossed) track("scroll", "page");
+        checkSteps();
+      }
+      function checkSteps() {
+        var root = document.documentElement;
+        var steps = document.querySelector(".steps-card");
+        if (steps && !dialog.open) {
+          var rect = steps.getBoundingClientRect();
+          if (rect.top < (window.innerHeight || root.clientHeight) && rect.bottom > 0) markSteps();
+        }
+      }
+      function scheduleHeartbeat() {
+        clearTimeout(heartbeatTimer);
+        if (visibleSince === null || left) return;
+        heartbeatTimer = setTimeout(function () {
+          track("engagement");
+          heartbeatDelay = 60000;
+          scheduleHeartbeat();
+        }, heartbeatDelay);
+      }
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") {
+          if (visibleSince === null) { visibleSince = Date.now(); scheduleHeartbeat(); }
+        } else if (visibleSince !== null) {
+          visibleMs = elapsed(); visibleSince = null; clearTimeout(heartbeatTimer); track("engagement");
+        }
+      });
+      window.addEventListener("pagehide", function () {
+        if (left) return;
+        left = true;
+        if (visibleSince !== null) { visibleMs = elapsed(); visibleSince = null; }
+        clearTimeout(heartbeatTimer);
+        track("leave");
+      });
+      window.addEventListener("pageshow", function (event) {
+        if (!event.persisted) return;
+        left = false;
+        if (document.visibilityState === "visible" && visibleSince === null) visibleSince = Date.now();
+        scheduleHeartbeat();
+      });
+      window.addEventListener("scroll", updateScroll, { passive: true });
+      document.getElementById("closeDialog").addEventListener("click", function () {
+        if (!dialog.open) return;
+        closeReason = "button"; dialog.close();
+      });
+      dialog.addEventListener("cancel", function () { closeReason = "escape"; });
+      dialog.addEventListener("close", function () { track("dialog_close", closeReason); checkSteps(); });
       track("view");
+      dialog.showModal();
+      track("dialog_show");
+      scheduleHeartbeat();
 
       var toastSub = document.getElementById("toastSub");
-      function onCopied() {
-        track("copy");
-        if (dialog.open) dialog.close();
+      function onCopied(inDialog) {
+        track("copy", inDialog ? "modal" : "page");
+        if (dialog.open) { closeReason = "copy"; dialog.close(); }
         btn.classList.add("done");
         btnText.textContent = "已複製，點擊再次複製";
         toastSub.textContent = "請手動打開 WeChat 貼上搜尋";
@@ -638,7 +724,7 @@
       }
 
       function onFailed(inDialog) {
-        track("copy_fail");
+        track("copy_fail", inDialog ? "modal" : "page");
         var target = inDialog ? modalWx : wxEl;
         var hint = document.getElementById(inDialog ? "modalHint" : "hint");
         hint.textContent = "自動複製失敗，請長按上方 WeChat ID 手動複製";
@@ -651,15 +737,15 @@
       if (window.ClipboardJS && ClipboardJS.isSupported()) {
         var clipboard = new ClipboardJS("#btnCopy");
         var modalClipboard = new ClipboardJS("#modalCopy", { container: dialog });
-        clipboard.on("success", function (e) { e.clearSelection(); onCopied(); });
-        modalClipboard.on("success", function (e) { e.clearSelection(); onCopied(); });
+        clipboard.on("success", function (e) { e.clearSelection(); onCopied(false); });
+        modalClipboard.on("success", function (e) { e.clearSelection(); onCopied(true); });
         clipboard.on("error", function () { onFailed(false); });
         modalClipboard.on("error", function () { onFailed(true); });
       } else {
         function bindCopy(button, inDialog) {
           button.addEventListener("click", function () {
             if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(wx).then(onCopied, function () { onFailed(inDialog); });
+              navigator.clipboard.writeText(wx).then(function () { onCopied(inDialog); }, function () { onFailed(inDialog); });
             } else {
               onFailed(inDialog);
             }
